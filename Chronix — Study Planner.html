@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chronix — Study Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f3ee; --panel:#fffdf9; --ink:#1d1b18; --mute:#6f6a62; --line:#e6e0d6;
+  --accent:#2f5d50; --accent-soft:#e3ece8; --warn:#a4462a; --warn-soft:#f6e4dd; --ok:#2f6b3a;
+  --brk:#b9b2a6; --rev:#7a5c1e; --rev-soft:#f3ead6;
+  --s1:#2f5d50; --s2:#8a4b2f; --s3:#3d5a8a; --s4:#7a4d84; --s5:#5e6b2a; --s6:#8a3d55;
+  --radius:12px;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#151413; --panel:#1e1c1a; --ink:#ece7df; --mute:#a29b90; --line:#33302c;
+    --accent:#7fb8a5; --accent-soft:#22302b; --warn:#e08a6c; --warn-soft:#3a2520; --ok:#86c493;
+    --brk:#5e5850; --rev:#d9b46a; --rev-soft:#33291a;
+    --s1:#7fb8a5; --s2:#e0a07e; --s3:#8fb0e6; --s4:#c99ad4; --s5:#b8c47a; --s6:#e391aa; }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "DM Sans",system-ui,sans-serif}
+header{padding:28px 28px 8px;max-width:1280px;margin:0 auto;display:flex;align-items:end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+h1{font-family:Fraunces,serif;font-weight:650;font-size:34px;margin:0;letter-spacing:-.5px}
+h1 span{color:var(--accent)}
+.tag{color:var(--mute);margin:2px 0 0}
+main{max-width:1280px;margin:0 auto;padding:16px 28px 60px;display:grid;grid-template-columns:380px 1fr;gap:24px;align-items:start}
+@media (max-width:920px){main{grid-template-columns:1fr;padding:12px 14px 50px}header{padding:20px 14px 4px}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+aside .card{position:sticky;top:16px;max-height:calc(100vh - 32px);overflow:auto}
+@media (max-width:920px){aside .card{position:static;max-height:none}}
+h2{font-family:Fraunces,serif;font-weight:500;font-size:19px;margin:0 0 12px}
+h3{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--mute);margin:18px 0 8px;font-weight:600}
+label{display:block;font-size:12.5px;color:var(--mute);margin-bottom:4px}
+input,select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 9px}
+textarea{resize:vertical;min-height:54px;font-size:13px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.row{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.row3{display:grid;gap:10px;grid-template-columns:1fr 1fr 1fr}
+.subj{border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:10px;background:var(--panel);position:relative}
+.subj .top{display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:end}
+.subj .nm{grid-column:1 / 3}
+.subj details{margin-top:6px}
+.subj summary{font-size:12.5px;color:var(--accent);cursor:pointer}
+.x{background:none;border:0;color:var(--mute);font-size:18px;cursor:pointer;padding:4px 6px;border-radius:6px}
+.x:hover{color:var(--warn);background:var(--warn-soft)}
+button.btn{font:inherit;font-weight:600;border-radius:9px;padding:9px 14px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+button.btn:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--panel)}
+button.primary:hover{filter:brightness(1.08)}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.hint{font-size:12px;color:var(--mute);margin-top:4px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
+/* summary */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+@media (max-width:600px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px}
+.stat b{display:block;font-family:Fraunces,serif;font-size:24px;font-weight:500}
+.stat span{font-size:12px;color:var(--mute)}
+.bars{display:grid;gap:8px}
+.bar{display:grid;grid-template-columns:110px 1fr 64px;gap:10px;align-items:center;font-size:13.5px}
+.bar .track{height:10px;background:var(--bg);border-radius:6px;overflow:hidden;border:1px solid var(--line)}
+.bar .fill{height:100%;border-radius:6px}
+.bar .num{text-align:right;font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--mute)}
+/* tabs */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:18px 0 14px;flex-wrap:wrap}
+.tabs button{font:inherit;background:none;border:0;padding:9px 14px;color:var(--mute);cursor:pointer;border-bottom:2px solid transparent;font-weight:500}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--accent)}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.toolbar .seg{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{font:inherit;font-size:13px;background:var(--panel);color:var(--mute);border:0;padding:6px 12px;cursor:pointer}
+.seg button.on{background:var(--accent-soft);color:var(--ink);font-weight:600}
+.phase{font-family:Fraunces,serif;font-size:18px;margin:22px 0 10px;display:flex;align-items:baseline;gap:10px}
+.phase small{font-family:"DM Sans";font-size:12.5px;color:var(--mute)}
+.day{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:10px;overflow:hidden}
+.day.today{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.dayhead{display:flex;justify-content:space-between;align-items:center;padding:11px 14px;gap:10px;flex-wrap:wrap;cursor:pointer}
+.dayhead .d{font-weight:600}
+.dayhead .meta{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.pill{font-size:11.5px;padding:2px 8px;border-radius:999px;background:var(--bg);border:1px solid var(--line);color:var(--mute);white-space:nowrap}
+.pill.exam{background:var(--warn-soft);border-color:transparent;color:var(--warn);font-weight:600}
+.pill.eve{background:var(--rev-soft);border-color:transparent;color:var(--rev)}
+.pill.today{background:var(--accent);border-color:transparent;color:var(--panel);font-weight:600}
+.pill.done{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.daybody{padding:0 14px 12px}
+.day.collapsed .daybody{display:none}
+.sess{display:grid;grid-template-columns:22px 118px 1fr;gap:8px;padding:7px 0;border-top:1px dashed var(--line);align-items:start}
+.sess:first-child{border-top:0}
+.sess .t{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--mute);padding-top:2px}
+.sess .what b{font-weight:600}
+.sess .what .sub{font-size:13px;color:var(--mute)}
+.sess.brk{grid-template-columns:22px 118px 1fr;color:var(--brk);font-size:13px;padding:3px 0}
+.sess.brk .t{color:var(--brk)}
+.sess.done .what{opacity:.5;text-decoration:line-through}
+.sess input[type=checkbox]{width:16px;height:16px;margin:3px 0 0;accent-color:var(--accent);cursor:pointer}
+.why{font-size:13px;color:var(--mute);margin-top:8px;padding:8px 10px;background:var(--bg);border-radius:8px}
+.why b{color:var(--ink);font-weight:600}
+.empty{font-size:13.5px;color:var(--mute);padding:4px 0}
+/* checks */
+.check{display:grid;grid-template-columns:26px 1fr;gap:8px;padding:10px 0;border-top:1px solid var(--line)}
+.check:first-child{border-top:0}
+.check .ic{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700}
+.check.pass .ic{background:var(--accent-soft);color:var(--ok)}
+.check.fail .ic{background:var(--warn-soft);color:var(--warn)}
+.check .detail{font-size:13px;color:var(--mute)}
+.lim{padding:9px 12px;border-left:3px solid var(--rev);background:var(--rev-soft);border-radius:0 8px 8px 0;margin-bottom:8px;font-size:13.5px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:9px;font-size:13.5px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+textarea#copybox{position:fixed;left:-9999px}
+.prog{height:6px;background:var(--bg);border-radius:4px;overflow:hidden;margin-top:6px;border:1px solid var(--line)}
+.prog div{height:100%;background:var(--accent)}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Chron<span>ix</span></h1>
+    <p class="tag">Evening study plans built around your exams, then checked against your rules.</p>
+  </div>
+</header>
+
+<main>
+<aside>
+  <div class="card">
+    <h2>Your exams</h2>
+    <div id="subjects"></div>
+    <button class="btn" id="addSubj" type="button">+ Add subject</button>
+
+    <h3>Daily time</h3>
+    <div class="row3">
+      <div><label for="hours">Focused hrs / day</label><input id="hours" type="number" min="1" max="10" step="0.5"></div>
+      <div><label for="startTime">Evening start</label><input id="startTime" type="time"></div>
+      <div><label for="endTime">Latest finish</label><input id="endTime" type="time"></div>
+    </div>
+    <div class="row3" style="margin-top:10px">
+      <div><label for="breakMin">Break (min)</label><input id="breakMin" type="number" min="5" max="30" step="5"></div>
+      <div><label for="maxBlock">Max block (min)</label><input id="maxBlock" type="number" min="30" max="120" step="10"></div>
+      <div><label for="revMin">Revision (min)</label><input id="revMin" type="number" min="0" max="60" step="5"></div>
+    </div>
+
+    <h3>Dates</h3>
+    <div class="row">
+      <div><label for="startDate">Plan starts</label><input id="startDate" type="date"></div>
+      <div><label for="firstStart">First-day start</label><input id="firstStart" type="time"></div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <div><label for="restDay">Weekly rest day</label>
+        <select id="restDay"><option value="-1">None</option><option value="0">Sunday</option><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option></select></div>
+      <div><label for="examTime">Exams are held</label>
+        <select id="examTime"><option value="day">During the day</option><option value="evening">In the evening</option></select></div>
+    </div>
+    <p class="hint">Breaks don't count toward your focused hours. Revision does.</p>
+
+    <div class="btns">
+      <button class="btn primary" id="gen" type="button">Generate plan</button>
+      <button class="btn" id="reset" type="button">Load example</button>
+    </div>
+  </div>
+</aside>
+
+<section>
+  <div class="stats" id="stats"></div>
+  <div class="card"><h2 style="margin-bottom:10px">Time per subject</h2><div class="bars" id="bars"></div>
+    <div class="hint" id="progLabel" style="margin-top:12px"></div><div class="prog"><div id="progFill" style="width:0"></div></div>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button class="on" data-tab="plan" type="button">Day-by-day plan</button>
+    <button data-tab="checks" type="button">Rule checks</button>
+  </div>
+
+  <div id="tab-plan">
+    <div class="toolbar">
+      <div class="seg" id="filter">
+        <button class="on" data-f="all" type="button">All days</button>
+        <button data-f="upcoming" type="button">From today</button>
+        <button data-f="week" type="button">Next 7 days</button>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" id="expand" type="button">Collapse all</button>
+        <button class="btn" id="copy" type="button">Copy as text</button>
+      </div>
+    </div>
+    <div id="plan"></div>
+  </div>
+
+  <div id="tab-checks" hidden>
+    <div class="card"><h2>Validation</h2><div id="checks"></div></div>
+    <div class="card" style="margin-top:14px"><h2>Limitations</h2><div id="lims"></div></div>
+  </div>
+</section>
+</main>
+<div class="toast" id="toast"></div>
+<textarea id="copybox" aria-hidden="true"></textarea>
+
+<script>
+(function(){
+"use strict";
+const COLORS=["--s1","--s2","--s3","--s4","--s5","--s6"];
+const DW={Difficult:3,Moderate:2,Easy:1.3};
+const DOW=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+
+/* ---------- date helpers ---------- */
+const pd=s=>{const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)};
+const iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const add=(d,n)=>new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);
+const diff=(a,b)=>Math.round((b-a)/864e5);
+const tm=s=>{const [h,m]=s.split(":").map(Number);return h*60+m};
+const fmt=m=>{let h=Math.floor(m/60),mm=m%60,ap=h>=12?"pm":"am";let hh=h%12||12;return hh+":"+String(mm).padStart(2,"0")+" "+ap};
+const fmtShort=m=>{let h=Math.floor(m/60),mm=m%60;return (h%12||12)+":"+String(mm).padStart(2,"0")};
+const dur=m=>{const h=Math.floor(m/60),r=m%60;return h&&r?h+"h "+r+"m":h?h+"h":r+"m"};
+const r10=x=>Math.round(x/10)*10, f10=x=>Math.floor(x/10)*10;
+const nice=d=>DOW[d.getDay()]+" "+d.getDate()+" "+MON[d.getMonth()];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ---------- defaults ---------- */
+function defaultStart(){
+  const now=new Date(), mins=now.getHours()*60+now.getMinutes();
+  if(mins>tm("22:30")-60) return {date:iso(add(now,1)),first:""};
+  if(mins>tm("18:00")) {const s=Math.ceil((mins+10)/30)*30;return {date:iso(now),first:String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")};}
+  return {date:iso(now),first:""};
+}
+function example(){
+  const y=new Date().getFullYear(), ds=defaultStart();
+  const yr=(new Date()>new Date(y,11,18))?y+1:y;
+  return {subjects:[
+    {name:"Mathematics",exam:yr+"-12-10",diff:"Difficult",units:""},
+    {name:"DAA",exam:yr+"-12-12",diff:"Difficult",units:""},
+    {name:"Operating Systems",exam:yr+"-12-15",diff:"Moderate",units:""},
+    {name:"Computer Networks",exam:yr+"-12-18",diff:"Moderate",units:""}],
+    hours:4,startTime:"18:00",endTime:"22:30",breakMin:10,maxBlock:90,revMin:30,
+    startDate:ds.date,firstStart:ds.first,restDay:"-1",examTime:"day"};
+}
+
+/* ---------- form ---------- */
+const $=id=>document.getElementById(id);
+const fields=["hours","startTime","endTime","breakMin","maxBlock","revMin","startDate","firstStart","restDay","examTime"];
+function subjRow(s,i){
+  const div=document.createElement("div");div.className="subj";
+  div.innerHTML=`<div class="top">
+    <div class="nm"><label>Subject</label><input data-k="name" value="${esc(s.name)}" placeholder="e.g. Mathematics"></div>
+    <button class="x" type="button" title="Remove" aria-label="Remove subject">×</button>
+    <div><label>Exam date</label><input data-k="exam" type="date" value="${esc(s.exam)}"></div>
+    <div><label>Difficulty</label><select data-k="diff">${["Difficult","Moderate","Easy"].map(d=>`<option${d===s.diff?" selected":""}>${d}</option>`).join("")}</select></div><span></span></div>
+    <details${s.units?" open":""}><summary>Syllabus units (optional)</summary>
+    <textarea data-k="units" placeholder="One unit per line. Leave empty and tasks say &quot;next portion&quot;.">${esc(s.units||"")}</textarea></details>`;
+  div.querySelector(".x").onclick=()=>{div.remove();};
+  return div;
+}
+function fillForm(c){
+  const box=$("subjects");box.innerHTML="";c.subjects.forEach((s,i)=>box.appendChild(subjRow(s,i)));
+  fields.forEach(f=>{$(f).value=c[f]??""});
+}
+function readForm(){
+  const subjects=[...document.querySelectorAll(".subj")].map(el=>{
+    const g=k=>el.querySelector(`[data-k=${k}]`).value;
+    return {name:g("name").trim()||"Subject",exam:g("exam"),diff:g("diff"),units:g("units")};
+  }).filter(s=>s.exam);
+  const c={subjects};fields.forEach(f=>c[f]=$(f).value);return c;
+}
+
+/* ---------- planner ---------- */
+function plan(cfg){
+  const cap=Math.round(parseFloat(cfg.hours||4)*60), brk=+cfg.breakMin||10, maxB=+cfg.maxBlock||90, revBase=+cfg.revMin||0;
+  const winS=tm(cfg.startTime||"18:00"), winE=tm(cfg.endTime||"22:30"), rest=+cfg.restDay;
+  const start=pd(cfg.startDate);
+  const lims=[];
+  const subs=cfg.subjects.map((s,i)=>({...s,id:i,color:COLORS[i%COLORS.length],examD:pd(s.exam),
+     unitList:(s.units||"").split("\n").map(x=>x.trim()).filter(Boolean)}));
+  const live=subs.filter(s=>diff(start,s.examD)>0);
+  subs.filter(s=>diff(start,s.examD)<=0).forEach(s=>lims.push(`<b>${esc(s.name)}</b>: the exam is on or before the plan's start date, so it isn't scheduled.`));
+  if(!live.length) return {days:[],subs,lims,cap,brk,maxB,winS,winE,cfg};
+  const last=new Date(Math.max(...live.map(s=>s.examD)));
+  const days=[]; const lastStudied={}; let prevStudied=[]; let studyDayCount=0;
+  for(let d=new Date(start);d<=last;d=add(d,1)){
+    const dISO=iso(d);
+    const examsToday=subs.filter(s=>iso(s.examD)===dISO);
+    const active=live.filter(s=>diff(d,s.examD)>0);
+    const day={date:new Date(d),iso:dISO,exams:examsToday,items:[],why:"",type:"study",budget:0};
+    days.push(day);
+    if(!active.length){day.type="final";continue;}
+    const toNext=Math.min(...active.map(s=>diff(d,s.examD)));
+    const eveSub=active.filter(s=>diff(d,s.examD)===1);
+    const isEve=eveSub.length>0;
+    if(rest===d.getDay() && !isEve && !examsToday.length){day.type="rest";continue;}
+    let wS=winS;
+    if(dISO===cfg.startDate && cfg.firstStart) wS=Math.max(winS,tm(cfg.firstStart));
+    if(cfg.examTime==="evening" && examsToday.length){day.type="examEvening";continue;}
+    let budget=cap;
+    if(isEve){ const lastOne=eveSub.some(s=>+s.examD===+last); budget=f10(cap*(lastOne?0.67:0.875)); day.eve=eveSub; }
+    const firstDay=studyDayCount===0;
+    let rev=firstDay?0:Math.min(revBase,f10(budget/4));
+    let study=budget-rev;
+    // priority
+    const w=s=>{let dt=diff(d,s.examD);let v=DW[s.diff]/Math.pow(dt,0.55);if(dt===1)v*=4;if(dt===2)v*=1.6;return v};
+    const sorted=[...active].sort((a,b)=>w(b)-w(a));
+    let chosen;
+    if(sorted.length<=2) chosen=sorted;
+    else{
+      const top=sorted.slice(0,2), restS=sorted.slice(2);
+      restS.sort((a,b)=>((lastStudied[a.id]??-1)-(lastStudied[b.id]??-1))||w(b)-w(a));
+      chosen=[...top,restS[0]];
+    }
+    // allocation
+    const alloc=new Map();
+    if(chosen.length===1) alloc.set(chosen[0],study);
+    else if(chosen.length===2){
+      const [a,b]=chosen;let wa=w(a),wb=w(b);let ma=r10(study*wa/(wa+wb));ma=Math.min(Math.max(ma,r10(study*0.4)),study-40);
+      alloc.set(a,ma);alloc.set(b,study-ma);
+    }else{
+      const third=Math.max(30,Math.min(60,r10(study*0.22)));const rem=study-third;
+      const [a,b,c]=chosen;let wa=w(a),wb=w(b);let ma=r10(rem*wa/(wa+wb));ma=Math.min(Math.max(ma,r10(rem*0.5)),rem-40);
+      alloc.set(a,ma);alloc.set(b,rem-ma);alloc.set(c,third);
+    }
+    // blocks
+    const blocks=[];
+    if(rev>0) blocks.push({kind:"rev",min:rev});
+    chosen.forEach(s=>{const m=alloc.get(s);if(m<=0)return;const n=Math.ceil(m/maxB);let left=m;
+      for(let k=0;k<n;k++){const sz=k===n-1?left:r10(m/n);left-=sz;blocks.push({kind:"study",sub:s,min:sz,part:k,parts:n});}});
+    // fit into window
+    let need=()=>blocks.reduce((a,b)=>a+b.min,0)+brk*(blocks.length-1);
+    let trimmed=false;
+    while(need()>winE-wS && blocks.length){
+      const lastB=blocks[blocks.length-1];const over=need()-(winE-wS);
+      if(lastB.min-over>=20){lastB.min-=f10(over)+(over%10?10:0);if(lastB.min<20)blocks.pop();}
+      else blocks.pop();
+      trimmed=true;
+    }
+    if(trimmed) day.trimmed=true;
+    if(!blocks.some(b=>b.kind==="study")){day.type="none";continue;}
+    let t=wS;
+    blocks.forEach((b,i)=>{
+      if(i>0){day.items.push({kind:"break",s:t,e:t+brk});t+=brk;}
+      day.items.push({...b,s:t,e:t+b.min});t+=b.min;
+    });
+    day.budget=blocks.reduce((a,b)=>a+b.min,0);
+    // revision task
+    const revItem=day.items.find(x=>x.kind==="rev");
+    if(revItem){
+      const still=prevStudied.filter(s=>diff(d,s.examD)>0);
+      if(d.getDay()===0) revItem.task=`Weekly review: skim ${active.map(s=>s.name).join(", ")} and mark each portion strong, okay or weak`;
+      else if(isEve) revItem.task=`Revision: ${eveSub.map(s=>s.name).join(", ")} key points and summary notes`;
+      else revItem.task=`Revision: recap yesterday's notes — ${(still.length?still:chosen).map(s=>s.name).join(", ")}`;
+      revItem.title="Revision";
+    }
+    const studied=chosen.filter(s=>alloc.get(s)>0);
+    studied.forEach(s=>lastStudied[s.id]=studyDayCount);
+    prevStudied=studied; studyDayCount++;
+    // why
+    const yesterdayExam=subs.filter(s=>iso(s.examD)===iso(add(d,-1)) || iso(s.examD)===dISO);
+    const lead=chosen[0], dt=diff(d,lead.examD);
+    let why="";
+    if(firstDay && wS>winS) why=`Late start, so today is short. It opens with the subjects that matter most right now. `;
+    else if(firstDay) why=`First day, so there's nothing to revise yet. `;
+    if(isEve) why+=`<b>${eveSub.map(s=>esc(s.name)).join(", ")}</b> exam is tomorrow, so it gets the first long block and the day is lighter (${dur(day.budget)}) so you can sleep early.`;
+    else if(examsToday.length) why+=`${examsToday.map(s=>esc(s.name)).join(", ")} is done. Time moves to <b>${esc(lead.name)}</b>, the next priority (exam in ${dt} day${dt>1?"s":""}).`;
+    else {
+      const top=chosen.slice(0,Math.min(2,chosen.length));
+      why+=`<b>${top.map(s=>esc(s.name)).join("</b> and <b>")}</b> lead`;
+      const reasons=top.map(s=>`${s.diff.toLowerCase()}, exam in ${diff(d,s.examD)} days`);
+      why+=` (${reasons.join("; ")}).`;
+      if(chosen.length===3) why+=` ${esc(chosen[2].name)} takes the lighter slot, rotating with the other subjects.`;
+    }
+    if(trimmed) why+=` Shortened to fit before ${fmt(winE)}.`;
+    day.why=why;
+  }
+  // task assignment per subject
+  subs.forEach(s=>{
+    const sess=[];days.forEach(d=>d.items.forEach(it=>{if(it.kind==="study"&&it.sub===s)sess.push({it,d})}));
+    const firstOfDay=sess.filter(x=>x.it.part===0);
+    const core=firstOfDay.filter(x=>diff(x.d.date,s.examD)>3);
+    const learnN=Math.max(1,Math.round(core.length*0.65));
+    const learn=core.slice(0,learnN);
+    const U=s.unitList.length;
+    let timedDone=false;
+    const hard=s.diff==="Difficult";
+    sess.forEach(({it,d})=>{
+      const dt=diff(d.date,s.examD), m=it.min;
+      if(it.part>0){it.task=hard?"Practice questions on today's material, then weak portions":"Practice questions + review of weak portions";return;}
+      if(dt===1){it.task=hard?`Final revision of key points (${r10(m*.5)} min), short timed practice set (${m-r10(m*.5)} min). No new hard material.`:`Final revision of key points + a few practice questions. No new material.`;return;}
+      if(dt<=3){
+        if(!timedDone&&m>=60){timedDone=true;it.task=`Timed practice set under exam conditions (previous-year paper if you have one), then mark mistakes`;}
+        else if(timedDone) it.task=`Review mistakes from the timed set, redo wrong questions, write a one-page summary`;
+        else it.task=hard?`Practice on weak portions, then a one-page summary of key points`:`Practice questions on weak portions + one-page summary`;
+        return;
+      }
+      const k=learn.findIndex(x=>x.it===it);
+      if(k>=0){
+        let what;
+        if(U){const a=Math.floor(k*U/learnN),b=Math.floor((k+1)*U/learnN);const us=s.unitList.slice(a,Math.max(b,a+ (a<U?1:0)));
+          what=us.length?us.join(", "):`continue ${s.unitList[U-1]}`;
+          if(k>0){const pa=Math.floor((k-1)*U/learnN);if(us.length===1&&pa===a)what=us[0]+" (continued)";}}
+        else what=k===0?"first portion":"next portion";
+        const c=hard?r10(m*0.55):r10(m*0.7);
+        it.task=hard?`${what[0].toUpperCase()+what.slice(1)}: concept study (${c} min) + practice (${m-c} min)`:`${what[0].toUpperCase()+what.slice(1)}: concept study (${c} min) + summary notes (${m-c} min)`;
+        if(U&&k===learnN-1&&k<U) it.task+= "";
+      }else{
+        const j=core.indexOf(core.find(x=>x.it===it))-learnN;
+        const opts=hard?["Practice on weaker portions (review, then problems)","Mixed practice across all portions","Second pass on weakest portions: short review, then practice problems"]
+                       :["Concept review + practice questions","Practice questions + review of weak portions","Mixed questions across all portions"];
+        it.task=opts[Math.max(0,j)%opts.length]+(U&&learnN<U?" — include any units not yet covered":"");
+      }
+    });
+    s.total=sess.reduce((a,x)=>a+x.it.min,0); s.count=sess.length;
+  });
+  // limitations
+  const firstStudy=days.find(d=>d.type==="study");
+  if(firstStudy && firstStudy.budget<cap) lims.push(`<b>Short first day:</b> only ${dur(firstStudy.budget)} fits on ${nice(firstStudy.date)}${cfg.firstStart?` starting at ${fmt(tm(cfg.firstStart))}`:""}.`);
+  days.filter(d=>d.trimmed&&d!==firstStudy).forEach(d=>lims.push(`<b>${nice(d.date)}:</b> the evening window (${fmt(winS)}–${fmt(winE)}) is too short for ${dur(cap)} plus breaks, so the day was shortened.`));
+  if(rest>=0) lims.push(`<b>Rest day:</b> ${["Sundays","Mondays","Tuesdays","Wednesdays","Thursdays","Fridays","Saturdays"][rest]} are off, except when an exam is the next day or that day.`);
+  else lims.push(`<b>No rest day:</b> every day has study. If you're tired, drop the lightest slot for that day rather than doubling up later.`);
+  live.forEach(s=>{if(s.total<6*60) lims.push(`<b>${esc(s.name)}:</b> only ${dur(s.total)} fits before its exam. Prioritise its most important portions.`);});
+  if(cfg.examTime==="day") lims.push(`<b>Exam timing:</b> exams are assumed to be during the day, so evening study continues on exam days for the remaining subjects.`);
+  else lims.push(`<b>Exam timing:</b> exams are in the evening, so no study is scheduled on exam days.`);
+  const noUnits=live.filter(s=>!s.unitList.length);
+  if(noUnits.length) lims.push(`<b>No syllabus units</b> for ${noUnits.map(s=>esc(s.name)).join(", ")}, so tasks say "next portion". Split each syllabus into portions and take them in order, or paste units to name them.`);
+  return {days,subs,live,lims,cap,brk,maxB,winS,winE,cfg};
+}
+
+/* ---------- validation ---------- */
+function validate(P){
+  const {days,live,cap,brk,maxB,winS,winE,cfg}=P;
+  const sd=days.filter(d=>d.type==="study");
+  const res=[];
+  const chk=(name,bad,okText,badText)=>res.push({name,pass:!bad.length,detail:bad.length?badText(bad):okText});
+  chk("Daily cap",sd.filter(d=>d.budget>cap),`No day goes over ${dur(cap)} of focused study. Heaviest day: ${dur(Math.max(0,...sd.map(d=>d.budget)))}.`,b=>`Over the cap on ${b.map(d=>nice(d.date)).join(", ")}.`);
+  chk("No overlaps",sd.filter(d=>d.items.some((it,i)=>i&&it.s<d.items[i-1].e)),"Every session starts when the previous item ends.",b=>`Overlaps on ${b.map(d=>nice(d.date)).join(", ")}.`);
+  chk("Breaks between sessions",sd.filter(d=>d.items.some((it,i)=>i&&it.kind!=="break"&&d.items[i-1].kind!=="break")),`${brk}-minute break between every pair of sessions, not counted as study.`,b=>`Missing breaks on ${b.map(d=>nice(d.date)).join(", ")}.`);
+  chk("Realistic block length",sd.filter(d=>d.items.some(it=>it.kind!=="break"&&it.min>maxB)),`No block is longer than ${maxB} minutes.`,b=>`Long blocks on ${b.map(d=>nice(d.date)).join(", ")}.`);
+  chk("Evening window",sd.filter(d=>d.items.some(it=>it.s<winS||it.e>winE)),`All study sits between ${fmt(winS)} and ${fmt(winE)}.`,b=>`Outside the window on ${b.map(d=>nice(d.date)).join(", ")}.`);
+  chk("Daily revision",sd.slice(1).filter(d=>!d.items.some(it=>it.kind==="rev")),+cfg.revMin>0?"Every study day after the first opens with revision. Sundays are weekly reviews.":"Revision is set to 0 minutes.",b=>`No revision on ${b.map(d=>nice(d.date)).join(", ")}.`);
+  const hardBad=[];sd.forEach(d=>d.items.forEach(it=>{if(it.kind==="study"&&it.sub.diff==="Difficult"&&!/practice|timed|redo/i.test(it.task||""))hardBad.push(d)}));
+  chk("Practice for difficult subjects",[...new Set(hardBad)],"Every session of a difficult subject includes practice or a timed set.",b=>`Missing practice on ${b.map(d=>nice(d.date)).join(", ")}.`);
+  const after=[];sd.forEach(d=>d.items.forEach(it=>{if(it.kind==="study"&&diff(d.date,it.sub.examD)<=0)after.push(d)}));
+  chk("Nothing after an exam",[...new Set(after)],"Each subject leaves the plan once its exam has passed.",b=>`Study after an exam on ${b.map(d=>nice(d.date)).join(", ")}.`);
+  chk("Every subject covered",live.filter(s=>!s.count),"Every subject has sessions before its exam.",b=>`No sessions for ${b.map(s=>esc(s.name)).join(", ")}.`);
+  const eveBad=sd.filter(d=>d.eve&&d.budget>=cap&&cap>60);
+  chk("Lighter day before each exam",eveBad,"The evening before each exam is shorter so you can rest.",b=>`Full load on ${b.map(d=>nice(d.date)).join(", ")}.`);
+  res.push({name:"No invented topics",pass:true,detail:live.some(s=>s.unitList.length)?"Tasks name only the units you pasted; other subjects use general tasks.":"Tasks are general (concept study, practice, revision), since no syllabus was given."});
+  return res;
+}
+
+/* ---------- render ---------- */
+let P=null, filter="all", collapsedAll=false;
+let ticks=store.get("chronix_ticks")||{};
+function key(d,i){return d.iso+"|"+i}
+function render(){
+  const cfg=readForm();
+  if(!cfg.subjects.length){$("plan").innerHTML='<div class="card empty">Add at least one subject with an exam date.</div>';return;}
+  store.set("chronix_cfg",cfg);
+  P=plan(cfg);
+  const checks=validate(P);
+  const sd=P.days.filter(d=>d.type==="study");
+  const totalMin=sd.reduce((a,d)=>a+d.budget,0);
+  const passN=checks.filter(c=>c.pass).length;
+  $("stats").innerHTML=[
+    [sd.length,"study days"],[dur(totalMin),"focused time"],
+    [P.live&&P.live.length?nice(P.live.reduce((a,b)=>a.examD<b.examD?a:b).examD).replace(/^\w+ /,""):"–","first exam"],
+    [passN+"/"+checks.length,"rule checks passed"]].map(([b,s])=>`<div class="stat"><b>${b}</b><span>${s}</span></div>`).join("");
+  const maxT=Math.max(1,...P.subs.map(s=>s.total||0));
+  $("bars").innerHTML=P.subs.map(s=>`<div class="bar"><div><span class="dot" style="background:var(${s.color})"></span>${esc(s.name)}</div>
+    <div class="track"><div class="fill" style="width:${(s.total||0)/maxT*100}%;background:var(${s.color})"></div></div><div class="num">${dur(s.total||0)}</div></div>`).join("");
+  renderPlan();
+  $("checks").innerHTML=checks.map(c=>`<div class="check ${c.pass?"pass":"fail"}"><div class="ic">${c.pass?"✓":"!"}</div><div><b>${c.name}</b><div class="detail">${c.detail}</div></div></div>`).join("");
+  $("lims").innerHTML=P.lims.length?P.lims.map(l=>`<div class="lim">${l}</div>`).join(""):'<div class="empty">None.</div>';
+  updateProgress();
+}
+function updateProgress(){
+  if(!P)return;let tot=0,done=0;
+  P.days.forEach(d=>d.items.forEach((it,i)=>{if(it.kind!=="break"){tot++;if(ticks[key(d,i)])done++;}}));
+  $("progLabel").textContent=`${done} of ${tot} sessions ticked off`;
+  $("progFill").style.width=(tot?done/tot*100:0)+"%";
+}
+function renderPlan(){
+  const today=iso(new Date()), weekEnd=iso(add(new Date(),7));
+  let html="", lastPhase=null;
+  const firstExam=P.live&&P.live.length?P.live.reduce((a,b)=>a.examD<b.examD?a:b).examD:null;
+  const phaseOf=d=>{if(!firstExam)return "";const dt=diff(d.date,firstExam);if(dt<=0)return "exam";if(dt<=9)return "push";return "first";};
+  const PH={first:["First pass","Learn each syllabus once, difficult subjects first"],push:["Final push","Practice, timed sets and weak spots before the first exam"],exam:["Exam stretch","Time follows the next exam"]};
+  P.days.forEach(d=>{
+    if(filter==="upcoming"&&d.iso<today)return;
+    if(filter==="week"&&(d.iso<today||d.iso>weekEnd))return;
+    const ph=phaseOf(d);
+    if(ph!==lastPhase){lastPhase=ph;const [t,s]=PH[ph];html+=`<div class="phase">${t} <small>${s}</small></div>`;}
+    const pills=[];
+    if(d.iso===today)pills.push('<span class="pill today">Today</span>');
+    d.exams.forEach(s=>pills.push(`<span class="pill exam">${esc(s.name)} exam</span>`));
+    if(d.eve)pills.push('<span class="pill eve">Day before exam</span>');
+    let body="";
+    if(d.type==="study"){
+      const n=d.items.filter(x=>x.kind!=="break").length, dn=d.items.filter((x,i)=>x.kind!=="break"&&ticks[key(d,i)]).length;
+      pills.push(`<span class="pill${dn===n?" done":""}">${dur(d.budget)} · ${dn}/${n}</span>`);
+      body=d.items.map((it,i)=>{
+        if(it.kind==="break")return `<div class="sess brk"><span></span><span class="t">${fmtShort(it.s)}–${fmtShort(it.e)}</span><span>Break</span></div>`;
+        const k=key(d,i), on=!!ticks[k];
+        const title=it.kind==="rev"?`<b style="color:var(--rev)">Revision</b>`:`<b><span class="dot" style="background:var(${it.sub.color})"></span>${esc(it.sub.name)}</b>`;
+        return `<div class="sess${on?" done":""}"><input type="checkbox" data-k="${k}"${on?" checked":""} aria-label="Done"><span class="t">${fmtShort(it.s)}–${fmtShort(it.e)}</span>
+          <div class="what">${title} <span class="sub">· ${it.min} min</span><div class="sub">${esc(it.task||"")}</div></div></div>`;
+      }).join("")+(d.items.length?`<div class="sess brk"><span></span><span class="t"></span><span>Done by ${fmt(d.items[d.items.length-1].e)}${d.eve?" — sleep early":""}</span></div>`:"")+`<div class="why">${d.why}</div>`;
+    }else{
+      const msg={final:"No study scheduled. Rest, eat well and go in fresh. Good luck!",rest:"Rest day. No study scheduled.",examEvening:"Exam this evening, so no study is scheduled.",none:"No time fits in the evening window today."}[d.type];
+      body=`<div class="empty">${msg}</div>`;
+    }
+    html+=`<div class="day${d.iso===today?" today":""}${collapsedAll?" collapsed":""}" data-iso="${d.iso}"><div class="dayhead"><span class="d">${nice(d.date)}</span><span class="meta">${pills.join("")}</span></div><div class="daybody">${body}</div></div>`;
+  });
+  $("plan").innerHTML=html||'<div class="card empty">No days in this range.</div>';
+}
+
+/* ---------- events ---------- */
+$("plan").addEventListener("change",e=>{
+  const k=e.target.dataset.k;if(!k)return;
+  if(e.target.checked)ticks[k]=1;else delete ticks[k];store.set("chronix_ticks",ticks);
+  e.target.closest(".sess").classList.toggle("done",e.target.checked);
+  const dayEl=e.target.closest(".day");const d=P.days.find(x=>x.iso===dayEl.dataset.iso);
+  const n=d.items.filter(x=>x.kind!=="break").length,dn=d.items.filter((x,i)=>x.kind!=="break"&&ticks[key(d,i)]).length;
+  const pill=[...dayEl.querySelectorAll(".pill")].pop();pill.textContent=`${dur(d.budget)} · ${dn}/${n}`;pill.classList.toggle("done",dn===n);
+  updateProgress();
+});
+$("plan").addEventListener("click",e=>{const h=e.target.closest(".dayhead");if(h)h.parentElement.classList.toggle("collapsed");});
+$("gen").onclick=()=>{render();toast("Plan updated");if(window.innerWidth<920)$("stats").scrollIntoView({behavior:"smooth"});};
+$("reset").onclick=()=>{fillForm(example());render();toast("Example loaded");};
+$("addSubj").onclick=()=>{const d=new Date();$("subjects").appendChild(subjRow({name:"",exam:iso(add(d,21)),diff:"Moderate",units:""}));};
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll(".tabs button").forEach(x=>x.classList.toggle("on",x===b));
+  $("tab-plan").hidden=b.dataset.tab!=="plan";$("tab-checks").hidden=b.dataset.tab!=="checks";});
+document.querySelectorAll("#filter button").forEach(b=>b.onclick=()=>{filter=b.dataset.f;document.querySelectorAll("#filter button").forEach(x=>x.classList.toggle("on",x===b));renderPlan();});
+$("expand").onclick=()=>{collapsedAll=!collapsedAll;$("expand").textContent=collapsedAll?"Expand all":"Collapse all";document.querySelectorAll(".day").forEach(d=>d.classList.toggle("collapsed",collapsedAll));};
+$("copy").onclick=async()=>{
+  if(!P)return;let out=`Chronix study plan\n\n`;
+  P.days.forEach(d=>{
+    out+=`${nice(d.date)}${d.exams.length?" — "+d.exams.map(s=>s.name+" exam").join(", "):""}${d.type==="study"?` (${dur(d.budget)})`:""}\n`;
+    if(d.type!=="study"){out+=`  ${d.type==="final"?"No study. Rest well.":d.type==="rest"?"Rest day.":"No study."}\n\n`;return;}
+    d.items.forEach(it=>{out+=`  ${fmtShort(it.s)}–${fmtShort(it.e)}  ${it.kind==="break"?"Break":it.kind==="rev"?"Revision: "+it.task.replace(/^Revision: /,""):it.sub.name+": "+it.task}\n`;});
+    out+=`  Why: ${d.why.replace(/<[^>]+>/g,"")}\n\n`;
+  });
+  try{await navigator.clipboard.writeText(out);toast("Plan copied");}
+  catch(e){const t=$("copybox");t.value=out;t.select();try{document.execCommand("copy");toast("Plan copied");}catch(_){toast("Copy blocked by the browser");}}
+};
+let tt;function toast(m){const t=$("toast");t.textContent=m;t.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("on"),1600);}
+
+/* ---------- init ---------- */
+const saved=store.get("chronix_cfg");
+fillForm(saved&&saved.subjects&&saved.subjects.length?saved:example());
+render();
+window.__chronix={plan,validate,readForm,example};
+})();
+</script>
+</body>
+</html>
